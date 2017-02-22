@@ -136,16 +136,6 @@ public:
             registerMethod(const QString &name, Func1 slot, bool readAll = true) {
         registerMethod(name, Q_NULLPTR, slot, readAll);
     }
-
-    template <typename Func1>
-    inline typename QtPrivate::QEnableIf<!QtPrivate::FunctionPointer<Func1>::IsPointerToMemberFunction &&
-                                         !QtPrivate::is_same<const char*, Func1>::value, void>::Type
-            registerMethod(const QString &name, QObject *context, Func1 slot, bool readAll = true) {
-
-        // There is an easier way to do this but then the header wouldn't
-        // compile on non-C++11 compilers
-        return registerMethod_functor(name, context, slot, &Func1::operator(), readAll);
-    }
 #endif
 
 protected:
