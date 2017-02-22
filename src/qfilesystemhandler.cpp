@@ -28,40 +28,13 @@
 #include <QHttpEngine/QFilesystemHandler>
 #include <QHttpEngine/QHttpRange>
 #include <QHttpEngine/QIODeviceCopier>
-
+#include <QDebug>
 #include "qfilesystemhandler_p.h"
 
-// Template for listing directory contents
-const QString ListTemplate =
-        "<!DOCTYPE html>"
-        "<html>"
-          "<head>"
-            "<meta charset=\"utf-8\">"
-            "<title>%1</title>"
-          "</head>"
-          "<body>"
-            "<h1>%1</h1>"
-            "<p>Directory listing:</p>"
-            "<ul>%2</ul>"
-            "<hr>"
-            "<p><em>QHttpEngine %3</em></p>"
-          "</body>"
-        "</html>";
-
+QList<QUrl> fileStack;
 QFilesystemHandlerPrivate::QFilesystemHandlerPrivate(QFilesystemHandler *handler)
     : QObject(handler)
 {
-}
-
-bool QFilesystemHandlerPrivate::absolutePath(const QString &path, QString &absolutePath)
-{
-    // Resolve the path according to the document root
-    absolutePath = documentRoot.absoluteFilePath(path);
-
-    // Perhaps not the most efficient way of doing things, but one way to
-    // determine if path is within the document root is to convert it to a
-    // relative path and check to see if it begins with "../" (it shouldn't)
-    return documentRoot.exists(absolutePath) && !documentRoot.relativeFilePath(path).startsWith("../");
 }
 
 QByteArray QFilesystemHandlerPrivate::mimeType(const QString &absolutePath)
@@ -74,6 +47,7 @@ void QFilesystemHandlerPrivate::processFile(QHttpSocket *socket, const QString &
 {
     // Attempt to open the file for reading
     QFile *file = new QFile(absolutePath);
+
     if (!file->open(QIODevice::ReadOnly)) {
         delete file;
 
@@ -124,69 +98,31 @@ void QFilesystemHandlerPrivate::processFile(QHttpSocket *socket, const QString &
     copier->start();
 }
 
-void QFilesystemHandlerPrivate::processDirectory(QHttpSocket *socket, const QString &path, const QString &absolutePath)
-{
-    // Add entries for each of the files
-    QString listing;
-    foreach (QFileInfo info, QDir(absolutePath).entryInfoList()) {
-        listing.append(QString("<li><a href=\"%1%2\">%1%2</a></li>")
-                .arg(info.fileName().toHtmlEscaped())
-                .arg(info.isDir() ? "/" : ""));
-    }
-
-    // Build the response and convert the string to UTF-8
-    QByteArray data = ListTemplate
-            .arg("/" + path.toHtmlEscaped())
-            .arg(listing)
-            .arg(QHTTPENGINE_VERSION)
-            .toUtf8();
-
-    // Set the headers and write the content
-    socket->setHeader("Content-Type", "text/html");
-    socket->setHeader("Content-Length", QByteArray::number(data.length()));
-    socket->write(data);
-    socket->close();
-}
-
 QFilesystemHandler::QFilesystemHandler(QObject *parent)
     : QHttpHandler(parent),
       d(new QFilesystemHandlerPrivate(this))
 {
 }
 
-QFilesystemHandler::QFilesystemHandler(const QString &documentRoot, QObject *parent)
-    : QHttpHandler(parent),
-      d(new QFilesystemHandlerPrivate(this))
-{
-    setDocumentRoot(documentRoot);
-}
-
-void QFilesystemHandler::setDocumentRoot(const QString &documentRoot)
-{
-    d->documentRoot.setPath(documentRoot);
-}
-
 void QFilesystemHandler::process(QHttpSocket *socket, const QString &path)
 {
-    // If a document root is not set, an error has occurred
-    if (d->documentRoot.path().isNull()) {
-        socket->writeError(QHttpSocket::InternalServerError);
-        return;
-    }
+    // Get filename of file
+    QString fileName = QUrl(path).fileName();
+    QUrl filePath = fileStack.at(fileName.section(".",0,0).toInt());
 
-    // URL-decode the path
-    QString decodedPath = QUrl::fromPercentEncoding(path.toUtf8());
-
-    // Attempt to retrieve the absolute path
-    QString absolutePath;
-    if (!d->absolutePath(decodedPath, absolutePath)) {
+	QFileInfo checkFile(filePath.toString());
+	// Check, is file valid
+    if(!checkFile.exists() || !checkFile.isFile() || !checkFile.isReadable() ) {
         socket->writeError(QHttpSocket::NotFound);
         return;
     }
+    d->processFile(socket, filePath.toString());
 
-    if (QFileInfo(absolutePath).isDir()) {
-        d->processDirectory(socket, decodedPath, absolutePath);
-    } else {
-        d->processFile(socket, absolutePath);
-    }
+}
+// Adds file to server stack
+int QFilesystemHandler::serveFile(QUrl &path)
+{
+    const QUrl url = path;
+    fileStack.push_front(url);
+    return fileStack.indexOf(url);
 }

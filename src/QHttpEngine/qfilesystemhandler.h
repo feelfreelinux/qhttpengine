@@ -57,18 +57,7 @@ public:
      */
     explicit QFilesystemHandler(QObject *parent = 0);
 
-    /**
-     * @brief Create a new filesystem handler from the specified directory
-     */
-    QFilesystemHandler(const QString &documentRoot, QObject *parent = 0);
-
-    /**
-     * @brief Set the document root
-     *
-     * The root path provided is used to resolve each of the requests when
-     * they are received.
-     */
-    void setDocumentRoot(const QString &documentRoot);
+    int serveFile( QUrl &path );
 
 protected:
 
@@ -78,7 +67,6 @@ protected:
     virtual void process(QHttpSocket *socket, const QString &path);
 
 private:
-
     QFilesystemHandlerPrivate *const d;
     friend class QFilesystemHandlerPrivate;
 };

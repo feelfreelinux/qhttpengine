@@ -35,17 +35,11 @@ class QFilesystemHandlerPrivate : public QObject
     Q_OBJECT
 
 public:
-
     QFilesystemHandlerPrivate(QFilesystemHandler *handler);
-
-    bool absolutePath(const QString &path, QString &absolutePath);
     QByteArray mimeType(const QString &path);
-
-    void processFile(QHttpSocket *socket, const QString &absolutePath);
-    void processDirectory(QHttpSocket *socket, const QString &path, const QString &absolutePath);
-
-    QDir documentRoot;
     QMimeDatabase database;
+    void processFile(QHttpSocket *socket, const QString &absolutePath);
+    int serveFile(QString &filename, QUrl &path );
 };
 
 #endif // QHTTPENGINE_QFILESYSTEMHANDLERPRIVATE_H
