@@ -20,26 +20,20 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CHAT_APIHANDLER_H
-#define CHAT_APIHANDLER_H
+#ifndef QHTTPENGINE_QHTTPENGINE_H
+#define QHTTPENGINE_QHTTPENGINE_H
 
-#include <QStringList>
-#include <QVariantMap>
+#include <QtCore/qglobal.h>
 
-#include <QHttpEngine/QObjectHandler>
+#define QHTTPENGINE_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define QHTTPENGINE_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define QHTTPENGINE_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define QHTTPENGINE_VERSION       "@PROJECT_VERSION@"
 
-class ApiHandler : public QObjectHandler
-{
-    Q_OBJECT
+#if defined(QHTTPENGINE_LIBRARY)
+#  define QHTTPENGINE_EXPORT Q_DECL_EXPORT
+#else
+#  define QHTTPENGINE_EXPORT Q_DECL_IMPORT
+#endif
 
-public Q_SLOTS:
-
-    QVariantMap get_messages(const QVariantMap &query);
-    QVariantMap post_newMessage(const QVariantMap &query, const QVariantMap &params);
-
-private:
-
-    QStringList mMessages;
-};
-
-#endif // CHAT_APIHANDLER_H
+#endif // QHTTPENGINE_QHTTPENGINE_H

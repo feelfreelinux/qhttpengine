@@ -20,18 +20,20 @@
  * IN THE SOFTWARE.
  */
 
-#include "qsocketpair.h"
+#ifndef QHTTPENGINE_QHTTPENGINE_H
+#define QHTTPENGINE_QHTTPENGINE_H
 
-QSocketPair::QSocketPair()
-    : mServerSocket(0)
-{
-    connect(&mServer, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
+#include <QtCore/qglobal.h>
 
-    mServer.listen(QHostAddress::LocalHost);
-    mClientSocket.connectToHost(mServer.serverAddress(), mServer.serverPort());
-}
+#define QHTTPENGINE_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define QHTTPENGINE_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define QHTTPENGINE_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define QHTTPENGINE_VERSION       "@PROJECT_VERSION@"
 
-void QSocketPair::onNewConnection()
-{
-    mServerSocket = mServer.nextPendingConnection();
-}
+#if defined(QHTTPENGINE_LIBRARY)
+#  define QHTTPENGINE_EXPORT Q_DECL_EXPORT
+#else
+#  define QHTTPENGINE_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // QHTTPENGINE_QHTTPENGINE_H
