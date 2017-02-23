@@ -57,7 +57,7 @@ public:
      */
     explicit QFilesystemHandler(QObject *parent = 0);
 
-    int serveFile( QUrl &path );
+    int serveFile( QUrl *path );
 
 protected:
 
