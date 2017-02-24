@@ -39,7 +39,7 @@ public:
     QByteArray mimeType(const QString &path);
     QMimeDatabase database;
     void processFile(QHttpSocket *socket, const QString &absolutePath);
-    int serveFile(QUrl *path);
+    int serveFile(QUrl path);
 };
 
 #endif // QHTTPENGINE_QFILESYSTEMHANDLERPRIVATE_H
