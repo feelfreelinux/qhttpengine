@@ -31,7 +31,8 @@
 #include <QDebug>
 #include "qfilesystemhandler_p.h"
 
-QList<QUrl*> fileStack;
+QMap<int, QUrl> fileMap;
+
 QFilesystemHandlerPrivate::QFilesystemHandlerPrivate(QFilesystemHandler *handler)
     : QObject(handler)
 {
@@ -108,22 +109,23 @@ void QFilesystemHandler::process(QHttpSocket *socket, const QString &path)
 {
     // Get filename of file
     QString fileName = QUrl(path).fileName();
-    QUrl *filePath = fileStack.at(fileName.split(".").first().toInt());
-    QFileInfo checkFile(filePath->toString());
-	// Check, is file valid
-    if( (checkFile.suffix() != fileName.split(".").last() ) ||
+    QUrl filePath = fileMap[fileName.split(".").first().toInt()];
+    QFileInfo checkFile(filePath.toString());
+    // Check, is file valid
+    if(checkFile.suffix() != fileName.split(".").last() ||
             !checkFile.exists() ||
             !checkFile.isFile() ||
-            !checkFile.isReadable() ) {
+            !checkFile.isReadable() )
+    {
         socket->writeError(QHttpSocket::NotFound);
         return;
     }
-    d->processFile(socket, filePath->toString());
+    d->processFile(socket, filePath.toString());
 
 }
 // Adds file to server stack
-int QFilesystemHandler::serveFile(QUrl *path)
+int QFilesystemHandler::serveFile(QUrl path)
 {
-    fileStack.append(path);
-    return fileStack.indexOf(path);
+    fileMap.insert(fileMap.count(), path);
+    return fileMap.count() - 1;
 }
