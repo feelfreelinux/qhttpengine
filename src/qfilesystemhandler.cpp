@@ -32,7 +32,6 @@
 #include "qfilesystemhandler_p.h"
 
 QMap<int, QUrl> fileMap;
-int fileMapCounter = 0;
 
 QFilesystemHandlerPrivate::QFilesystemHandlerPrivate(QFilesystemHandler *handler)
     : QObject(handler)
@@ -127,7 +126,6 @@ void QFilesystemHandler::process(QHttpSocket *socket, const QString &path)
 // Adds file to server stack
 int QFilesystemHandler::serveFile(QUrl path)
 {
-    fileMap.insert(fileMapCounter, path);
-    fileMapCounter++;
-    return fileMapCounter - 1;
+    fileMap.insert(fileMap.count(), path);
+    return fileMap.count() - 1;
 }
